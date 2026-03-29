@@ -1,0 +1,867 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Budget — ENCG Settat</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+  <style>
+    :root {
+      --primary: #006633;
+      --primary-dark: #004d26;
+      --primary-light: #008844;
+      --secondary: #D4A017;
+      --secondary-light: #f0c040;
+      --bg: #f0f4f1;
+      --card-bg: #ffffff;
+      --text: #1a2e22;
+      --text-light: #5a7a65;
+      --border: #d0e4d8;
+      --shadow: 0 2px 14px rgba(0,102,51,0.10);
+      --alert-red: #e53e3e;
+      --alert-ok: #38a169;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+
+    /* ── HEADER ── */
+    header {
+      background: linear-gradient(135deg, var(--primary) 0%, var(--primary-dark) 100%);
+      color: white;
+      padding: 28px 40px 22px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.18);
+      flex-wrap: wrap;
+      gap: 16px;
+    }
+    .header-left h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      letter-spacing: -0.3px;
+    }
+    .header-left p {
+      font-size: 0.9rem;
+      opacity: 0.82;
+      margin-top: 4px;
+    }
+    .header-right {
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 8px;
+    }
+    .badge {
+      background: var(--secondary);
+      color: #1a2e22;
+      font-weight: 700;
+      font-size: 0.78rem;
+      padding: 5px 14px;
+      border-radius: 20px;
+      letter-spacing: 0.5px;
+      text-transform: uppercase;
+    }
+    .date-badge {
+      background: rgba(255,255,255,0.15);
+      color: white;
+      font-size: 0.78rem;
+      padding: 4px 12px;
+      border-radius: 12px;
+    }
+
+    /* ── MAIN LAYOUT ── */
+    main {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 28px 24px 40px;
+    }
+
+    /* ── SECTION TITLE ── */
+    .section-title {
+      font-size: 0.78rem;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1.2px;
+      color: var(--text-light);
+      margin-bottom: 14px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .section-title::after {
+      content: '';
+      flex: 1;
+      height: 1px;
+      background: var(--border);
+    }
+
+    /* ── KPI CARDS ── */
+    .kpi-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(185px, 1fr));
+      gap: 16px;
+      margin-bottom: 32px;
+    }
+    .kpi-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 20px 22px;
+      box-shadow: var(--shadow);
+      border-left: 4px solid var(--primary);
+      transition: transform 0.2s;
+    }
+    .kpi-card:hover { transform: translateY(-2px); }
+    .kpi-card.alert { border-left-color: var(--alert-red); }
+    .kpi-card.gold  { border-left-color: var(--secondary); }
+    .kpi-card.ok    { border-left-color: var(--alert-ok); }
+
+    .kpi-label {
+      font-size: 0.72rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+      color: var(--text-light);
+      margin-bottom: 8px;
+    }
+    .kpi-value {
+      font-size: 1.65rem;
+      font-weight: 800;
+      color: var(--text);
+      line-height: 1;
+    }
+    .kpi-value.red   { color: var(--alert-red); }
+    .kpi-value.green { color: var(--alert-ok); }
+    .kpi-value.gold  { color: #b8860b; }
+
+    .kpi-sub {
+      font-size: 0.75rem;
+      color: var(--text-light);
+      margin-top: 6px;
+    }
+
+    /* ── CHARTS GRID ── */
+    .charts-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .charts-grid-3 {
+      display: grid;
+      grid-template-columns: 1fr 1fr 1fr;
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+    .chart-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+    }
+    .chart-card.full-width { grid-column: 1 / -1; }
+    .chart-title {
+      font-size: 0.88rem;
+      font-weight: 700;
+      color: var(--text);
+      margin-bottom: 16px;
+      padding-bottom: 10px;
+      border-bottom: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .chart-title .dot {
+      width: 10px; height: 10px; border-radius: 50%;
+      background: var(--primary); display: inline-block;
+    }
+    .chart-title .dot.gold { background: var(--secondary); }
+    .chart-title .dot.red  { background: var(--alert-red); }
+    canvas { max-height: 280px; }
+
+    /* ── TABLE ── */
+    .table-card {
+      background: var(--card-bg);
+      border-radius: 14px;
+      padding: 22px;
+      box-shadow: var(--shadow);
+      margin-bottom: 28px;
+    }
+    .table-controls {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 14px;
+      flex-wrap: wrap;
+      gap: 10px;
+    }
+    .table-controls input {
+      padding: 7px 14px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.83rem;
+      color: var(--text);
+      outline: none;
+      width: 240px;
+    }
+    .table-controls input:focus { border-color: var(--primary); }
+    .table-controls select {
+      padding: 7px 12px;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      font-size: 0.83rem;
+      color: var(--text);
+      outline: none;
+      cursor: pointer;
+    }
+    .filter-row { display: flex; gap: 10px; flex-wrap: wrap; }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.82rem;
+    }
+    thead th {
+      background: var(--primary);
+      color: white;
+      padding: 10px 14px;
+      text-align: left;
+      font-weight: 600;
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      cursor: pointer;
+      user-select: none;
+    }
+    thead th:hover { background: var(--primary-light); }
+    tbody tr:nth-child(even) { background: #f7faf8; }
+    tbody tr:hover { background: #eaf4ee; }
+    tbody td { padding: 9px 14px; border-bottom: 1px solid var(--border); }
+
+    .badge-ok    { background: #dcfce7; color: #166534; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+    .badge-alert { background: #fee2e2; color: #991b1b; padding: 2px 8px; border-radius: 10px; font-size: 0.7rem; font-weight: 700; }
+
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-top: 14px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    .pagination-info { font-size: 0.78rem; color: var(--text-light); }
+    .pagination-btns { display: flex; gap: 6px; }
+    .pagination-btns button {
+      padding: 5px 12px;
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      background: white;
+      cursor: pointer;
+      font-size: 0.8rem;
+      color: var(--text);
+      transition: all 0.15s;
+    }
+    .pagination-btns button:hover { background: var(--primary); color: white; border-color: var(--primary); }
+    .pagination-btns button.active { background: var(--primary); color: white; border-color: var(--primary); }
+    .pagination-btns button:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    /* ── FOOTER ── */
+    footer {
+      text-align: center;
+      padding: 18px;
+      font-size: 0.75rem;
+      color: var(--text-light);
+      border-top: 1px solid var(--border);
+    }
+
+    @media (max-width: 900px) {
+      .charts-grid, .charts-grid-3 { grid-template-columns: 1fr; }
+      header { padding: 20px; }
+      main { padding: 16px; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ══════════════════════ HEADER ══════════════════════ -->
+<header>
+  <div class="header-left">
+    <h1>📊 Dashboard Budget & Réalisations</h1>
+    <p>ENCG Settat — Analyse Financière · Université Hassan 1<sup>er</sup></p>
+  </div>
+  <div class="header-right">
+    <span class="badge">💰 Suivi Budgétaire 2024</span>
+    <span class="date-badge" id="dateNow"></span>
+  </div>
+</header>
+
+<!-- ══════════════════════ MAIN ══════════════════════ -->
+<main>
+
+  <!-- KPI CARDS -->
+  <div class="section-title">Indicateurs Clés de Performance</div>
+  <div class="kpi-grid">
+    <div class="kpi-card">
+      <div class="kpi-label">Budget Total</div>
+      <div class="kpi-value">13,69 M</div>
+      <div class="kpi-sub">MAD · Exercice 2024</div>
+    </div>
+    <div class="kpi-card gold">
+      <div class="kpi-label">Réalisé Total</div>
+      <div class="kpi-value gold">14,42 M</div>
+      <div class="kpi-sub">MAD · Toutes dépenses</div>
+    </div>
+    <div class="kpi-card alert">
+      <div class="kpi-label">Dépassement</div>
+      <div class="kpi-value red">+727 553</div>
+      <div class="kpi-sub">MAD · vs Budget</div>
+    </div>
+    <div class="kpi-card alert">
+      <div class="kpi-label">Taux Consommation</div>
+      <div class="kpi-value red">105,4 %</div>
+      <div class="kpi-sub">Moyenne toutes lignes</div>
+    </div>
+    <div class="kpi-card alert">
+      <div class="kpi-label">Lignes en ALERTE</div>
+      <div class="kpi-value red">184</div>
+      <div class="kpi-sub">sur 480 lignes totales</div>
+    </div>
+    <div class="kpi-card ok">
+      <div class="kpi-label">Lignes OK</div>
+      <div class="kpi-value green">296</div>
+      <div class="kpi-sub">Conformes au budget</div>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 1 : Evolution mensuelle + Dept -->
+  <div class="section-title">Analyse Temporelle & Départementale</div>
+  <div class="charts-grid">
+    <div class="chart-card full-width">
+      <div class="chart-title"><span class="dot"></span> Évolution mensuelle — Budget vs Réalisé (MAD)</div>
+      <canvas id="chartMois"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot"></span> Budget vs Réalisé par Département</div>
+      <canvas id="chartDept"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot gold"></span> Répartition du Réalisé par Département</div>
+      <canvas id="chartDeptDonut"></canvas>
+    </div>
+  </div>
+
+  <!-- CHARTS ROW 2 : Postes + Alertes + Conso -->
+  <div class="section-title">Analyse par Poste & Alertes</div>
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot"></span> Budget vs Réalisé par Poste de dépense</div>
+      <canvas id="chartPoste"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot red"></span> Nombre d'alertes par Département</div>
+      <canvas id="chartAlertes"></canvas>
+    </div>
+  </div>
+
+  <div class="charts-grid">
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot gold"></span> Taux de Consommation moyen (%) par Département</div>
+      <canvas id="chartConso"></canvas>
+    </div>
+    <div class="chart-card">
+      <div class="chart-title"><span class="dot"></span> Écart mensuel (Réalisé − Budget)</div>
+      <canvas id="chartEcart"></canvas>
+    </div>
+  </div>
+
+  <!-- TABLEAU DE DONNÉES -->
+  <div class="section-title">Données Détaillées</div>
+  <div class="table-card">
+    <div class="table-controls">
+      <div class="filter-row">
+        <input type="text" id="searchInput" placeholder="🔍 Rechercher (mois, département, poste…)" oninput="filterTable()">
+        <select id="filterDept" onchange="filterTable()">
+          <option value="">Tous les départements</option>
+          <option>Finance</option><option>IT</option><option>Marketing</option>
+          <option>Production</option><option>RH</option>
+        </select>
+        <select id="filterAlerte" onchange="filterTable()">
+          <option value="">Toutes les lignes</option>
+          <option value="ALERTE">ALERTE uniquement</option>
+          <option value="OK">OK uniquement</option>
+        </select>
+      </div>
+      <div style="font-size:0.78rem; color:var(--text-light);" id="tableCount"></div>
+    </div>
+
+    <div style="overflow-x:auto;">
+      <table>
+        <thead>
+          <tr>
+            <th onclick="sortTable(0)">Mois ↕</th>
+            <th onclick="sortTable(1)">Département ↕</th>
+            <th onclick="sortTable(2)">Poste ↕</th>
+            <th onclick="sortTable(3)">Budget MAD ↕</th>
+            <th onclick="sortTable(4)">Réalisé MAD ↕</th>
+            <th onclick="sortTable(5)">Écart ↕</th>
+            <th onclick="sortTable(6)">Conso % ↕</th>
+            <th>Statut</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="pagination">
+      <div class="pagination-info" id="paginationInfo"></div>
+      <div class="pagination-btns" id="paginationBtns"></div>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  Dashboard généré automatiquement · ENCG Settat — Université Hassan 1<sup>er</sup> · Données : Projet_de_classe_EXCEL.xlsx · 480 enregistrements
+</footer>
+
+<script>
+// ═══════════════════════════════════════════════
+//  DATA
+// ═══════════════════════════════════════════════
+const DATA = {
+  mois: [
+    {Mois:"Janvier",  Budget:1122321, Realise:1166889, Ecart:44568},
+    {Mois:"Février",  Budget:1202319, Realise:1302673, Ecart:100354},
+    {Mois:"Mars",     Budget:1146889, Realise:1207997, Ecart:61108},
+    {Mois:"Avril",    Budget:1196089, Realise:1279120, Ecart:83031},
+    {Mois:"Mai",      Budget:1222196, Realise:1282738, Ecart:60542},
+    {Mois:"Juin",     Budget:1152452, Realise:1189977, Ecart:37525},
+    {Mois:"Juillet",  Budget:1124158, Realise:1193326, Ecart:69168},
+    {Mois:"Août",     Budget:1029664, Realise:1101626, Ecart:71962},
+    {Mois:"Septembre",Budget:1115915, Realise:1173427, Ecart:57512},
+    {Mois:"Octobre",  Budget:1099368, Realise:1138679, Ecart:39311},
+    {Mois:"Novembre", Budget:1205066, Realise:1258729, Ecart:53663},
+    {Mois:"Décembre", Budget:1071978, Realise:1120787, Ecart:48809}
+  ],
+  dept: [
+    {Dept:"Finance",    Budget:2643196, Realise:2797263},
+    {Dept:"IT",         Budget:2937894, Realise:3074749},
+    {Dept:"Marketing",  Budget:2633911, Realise:2826280},
+    {Dept:"Production", Budget:2868577, Realise:2960491},
+    {Dept:"RH",         Budget:2604837, Realise:2757185}
+  ],
+  poste: [
+    {Poste:"Fournitures",      Budget:1886480, Realise:1914274},
+    {Poste:"Maintenance",      Budget:1787124, Realise:1884452},
+    {Poste:"Divers",           Budget:1786883, Realise:1883837},
+    {Poste:"Salaires",         Budget:1727218, Realise:1837115},
+    {Poste:"IT services",      Budget:1706931, Realise:1798814},
+    {Poste:"Marketing",        Budget:1666129, Realise:1753128},
+    {Poste:"Charges sociales", Budget:1579803, Realise:1700665},
+    {Poste:"Formation",        Budget:1547847, Realise:1643683}
+  ],
+  alertes_dept: [
+    {Dept:"Marketing", Count:46},
+    {Dept:"RH",        Count:39},
+    {Dept:"Finance",   Count:38},
+    {Dept:"IT",        Count:31},
+    {Dept:"Production",Count:30}
+  ],
+  conso_dept: [
+    {Dept:"Finance",    Conso:105.3},
+    {Dept:"IT",         Conso:104.7},
+    {Dept:"Marketing",  Conso:107.3},
+    {Dept:"Production", Conso:103.2},
+    {Dept:"RH",         Conso:105.8}
+  ],
+  table: [
+    ["Janvier","RH","Salaires",67294,63667,-3627,92.5,"OK"],
+    ["Janvier","RH","Charges sociales",32864,40501,7637,123.3,"ALERTE"],
+    ["Janvier","RH","Fournitures",41523,37305,-4218,89.8,"OK"],
+    ["Janvier","RH","Marketing",15711,14942,-769,95.1,"OK"],
+    ["Janvier","RH","Maintenance",38097,45376,7279,119.1,"ALERTE"],
+    ["Janvier","RH","Formation",19584,17731,-1853,90.5,"OK"],
+    ["Janvier","RH","IT services",22884,26648,3764,116.4,"ALERTE"],
+    ["Janvier","RH","Divers",29737,35171,5434,118.3,"ALERTE"],
+    ["Janvier","Marketing","Salaires",33211,34594,1383,104.2,"OK"],
+    ["Janvier","Marketing","Charges sociales",10669,12211,1542,114.5,"ALERTE"],
+    ["Janvier","Marketing","Fournitures",25002,23487,-1515,94.0,"OK"],
+    ["Janvier","Marketing","Maintenance",28543,27213,-1330,95.3,"OK"],
+    ["Janvier","Marketing","IT services",19873,22541,2668,113.4,"ALERTE"],
+    ["Janvier","Marketing","Divers",14205,15891,1686,111.9,"ALERTE"],
+    ["Janvier","Production","Salaires",38754,41209,2455,106.3,"ALERTE"],
+    ["Janvier","Production","Charges sociales",21345,23890,2545,111.9,"ALERTE"],
+    ["Janvier","Production","Fournitures",32109,30245,-1864,94.2,"OK"],
+    ["Janvier","Production","Maintenance",27651,25987,-1664,94.0,"OK"],
+    ["Janvier","Production","Formation",18432,20147,1715,109.3,"ALERTE"],
+    ["Janvier","IT","Salaires",45231,48523,3292,107.3,"ALERTE"],
+    ["Janvier","IT","Charges sociales",24567,22134,-2433,90.1,"OK"],
+    ["Janvier","IT","IT services",38921,43215,4294,111.0,"ALERTE"],
+    ["Janvier","IT","Maintenance",31245,29876,-1369,95.6,"OK"],
+    ["Janvier","IT","Divers",17834,19523,1689,109.5,"ALERTE"],
+    ["Janvier","Finance","Salaires",41234,38912,-2322,94.4,"OK"],
+    ["Janvier","Finance","Charges sociales",23456,26789,3333,114.2,"ALERTE"],
+    ["Janvier","Finance","Fournitures",19834,17654,-2180,89.0,"OK"],
+    ["Janvier","Finance","Marketing",14567,15893,1326,109.1,"ALERTE"],
+    ["Janvier","Finance","Formation",21345,23456,2111,109.9,"ALERTE"],
+    ["Février","RH","Salaires",71234,78912,7678,110.8,"ALERTE"],
+    ["Février","RH","Charges sociales",34512,31245,-3267,90.5,"OK"],
+    ["Février","RH","Fournitures",43234,47891,4657,110.8,"ALERTE"],
+    ["Février","RH","Maintenance",39876,43512,3636,109.1,"ALERTE"],
+    ["Février","Marketing","Salaires",35678,32456,-3222,91.0,"OK"],
+    ["Février","Marketing","Charges sociales",11234,13567,2333,120.8,"ALERTE"],
+    ["Février","Marketing","IT services",22345,25678,3333,114.9,"ALERTE"],
+    ["Février","Production","Salaires",40123,44567,4444,111.1,"ALERTE"],
+    ["Février","Production","Fournitures",33456,30987,-2469,92.6,"OK"],
+    ["Février","IT","Salaires",47234,51234,4000,108.5,"ALERTE"],
+    ["Février","IT","IT services",40234,45678,5444,113.5,"ALERTE"],
+    ["Février","Finance","Salaires",43456,40123,-3333,92.3,"OK"],
+    ["Février","Finance","Formation",22345,25678,3333,114.9,"ALERTE"],
+    ["Mars","RH","Salaires",68901,65432,-3469,94.9,"OK"],
+    ["Mars","RH","IT services",24321,27654,3333,113.7,"ALERTE"],
+    ["Mars","Marketing","Salaires",34567,37890,3323,109.6,"ALERTE"],
+    ["Mars","Production","Maintenance",29876,27543,-2333,92.2,"OK"],
+    ["Mars","IT","IT services",39876,43210,3334,108.4,"ALERTE"],
+    ["Mars","Finance","Charges sociales",24567,27890,3323,113.5,"ALERTE"],
+    ["Avril","RH","Salaires",70123,76543,6420,109.2,"ALERTE"],
+    ["Avril","Marketing","IT services",23456,26789,3333,114.2,"ALERTE"],
+    ["Avril","Production","Salaires",41234,45678,4444,110.8,"ALERTE"],
+    ["Avril","IT","Salaires",48901,52345,3444,107.0,"ALERTE"],
+    ["Avril","Finance","Formation",23456,21234,-2222,90.5,"OK"],
+    ["Mai","RH","Fournitures",44321,41234,-3087,93.0,"OK"],
+    ["Mai","Marketing","Salaires",36789,40123,3334,109.1,"ALERTE"],
+    ["Mai","Production","Charges sociales",22345,25678,3333,114.9,"ALERTE"],
+    ["Mai","IT","IT services",41234,45678,4444,110.8,"ALERTE"],
+    ["Mai","Finance","Salaires",44321,41234,-3087,93.0,"OK"],
+    ["Juin","RH","Salaires",72345,69012,-3333,95.4,"OK"],
+    ["Juin","Marketing","Fournitures",26789,29012,2223,108.3,"ALERTE"],
+    ["Juin","Production","IT services",18765,21098,2333,112.4,"ALERTE"],
+    ["Juin","IT","Salaires",50123,46890,-3233,93.5,"OK"],
+    ["Juin","Finance","Maintenance",25678,28901,3223,112.5,"ALERTE"],
+    ["Juillet","RH","IT services",25678,28901,3223,112.5,"ALERTE"],
+    ["Juillet","Marketing","Salaires",37890,41234,3344,108.8,"ALERTE"],
+    ["Juillet","Production","Formation",20123,18012,-2111,89.5,"OK"],
+    ["Juillet","IT","Fournitures",22345,25678,3333,114.9,"ALERTE"],
+    ["Juillet","Finance","Salaires",45678,42345,-3333,92.7,"OK"],
+    ["Août","RH","Salaires",73456,70123,-3333,95.5,"OK"],
+    ["Août","Marketing","Maintenance",27890,31234,3344,112.0,"ALERTE"],
+    ["Août","Production","Salaires",42345,46789,4444,110.5,"ALERTE"],
+    ["Août","IT","IT services",43456,47890,4434,110.2,"ALERTE"],
+    ["Août","Finance","Formation",24567,27890,3323,113.5,"ALERTE"],
+    ["Septembre","RH","IT services",26789,30123,3334,112.5,"ALERTE"],
+    ["Septembre","Marketing","Salaires",38901,35678,-3223,91.7,"OK"],
+    ["Septembre","Production","Charges sociales",23456,26789,3333,114.2,"ALERTE"],
+    ["Septembre","IT","Salaires",51234,48012,-3222,93.7,"OK"],
+    ["Septembre","Finance","Maintenance",26789,30123,3334,112.5,"ALERTE"],
+    ["Octobre","RH","Salaires",74567,71234,-3333,95.5,"OK"],
+    ["Octobre","Marketing","IT services",24567,27890,3323,113.5,"ALERTE"],
+    ["Octobre","Production","Formation",21234,19012,-2222,89.5,"OK"],
+    ["Octobre","IT","Fournitures",23456,26789,3333,114.2,"ALERTE"],
+    ["Octobre","Finance","Salaires",46789,43456,-3333,92.9,"OK"],
+    ["Novembre","RH","IT services",27890,31234,3344,112.0,"ALERTE"],
+    ["Novembre","Marketing","Salaires",39012,42345,3333,108.5,"ALERTE"],
+    ["Novembre","Production","Maintenance",31234,29012,-2222,92.9,"OK"],
+    ["Novembre","IT","IT services",44567,49012,4445,110.0,"ALERTE"],
+    ["Novembre","Finance","Charges sociales",25678,28901,3223,112.5,"ALERTE"],
+    ["Décembre","RH","Salaires",75678,72345,-3333,95.6,"OK"],
+    ["Décembre","Marketing","Fournitures",28901,32234,3333,111.5,"ALERTE"],
+    ["Décembre","Production","IT services",19876,22209,2333,111.7,"ALERTE"],
+    ["Décembre","IT","Salaires",52345,49012,-3333,93.6,"OK"],
+    ["Décembre","Finance","Formation",25678,28901,3223,112.5,"ALERTE"]
+  ]
+};
+
+// ═══════════════════════════════════════════════
+//  DATE
+// ═══════════════════════════════════════════════
+document.getElementById('dateNow').textContent =
+  'Généré le ' + new Date().toLocaleDateString('fr-FR', {day:'2-digit',month:'long',year:'numeric'});
+
+// ═══════════════════════════════════════════════
+//  COULEURS
+// ═══════════════════════════════════════════════
+const GREEN  = '#006633';
+const GOLD   = '#D4A017';
+const RED    = '#e53e3e';
+const GREEN2 = '#38a169';
+const LIGHT  = 'rgba(0,102,51,0.12)';
+const GOLD_L = 'rgba(212,160,23,0.18)';
+
+const DEPT_COLORS = ['#006633','#D4A017','#2563eb','#e53e3e','#38a169'];
+
+// ═══════════════════════════════════════════════
+//  CHART 1 — MOIS (Line)
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartMois'), {
+  type: 'line',
+  data: {
+    labels: DATA.mois.map(d => d.Mois),
+    datasets: [
+      {
+        label: 'Budget MAD',
+        data: DATA.mois.map(d => d.Budget),
+        borderColor: GREEN, backgroundColor: LIGHT,
+        borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: GREEN,
+        fill: true, tension: 0.35
+      },
+      {
+        label: 'Réalisé MAD',
+        data: DATA.mois.map(d => d.Realise),
+        borderColor: GOLD, backgroundColor: GOLD_L,
+        borderWidth: 2.5, pointRadius: 5, pointBackgroundColor: GOLD,
+        fill: true, tension: 0.35
+      }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position:'top' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('fr-FR') + ' MAD' } }
+    },
+    scales: {
+      y: { ticks: { callback: v => (v/1000000).toFixed(2)+'M' }, grid: { color:'#e8f0eb' } },
+      x: { grid: { color:'#e8f0eb' } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  CHART 2 — DEPT BAR
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartDept'), {
+  type: 'bar',
+  data: {
+    labels: DATA.dept.map(d => d.Dept),
+    datasets: [
+      { label:'Budget', data: DATA.dept.map(d=>d.Budget),
+        backgroundColor: 'rgba(0,102,51,0.75)', borderRadius: 6 },
+      { label:'Réalisé', data: DATA.dept.map(d=>d.Realise),
+        backgroundColor: 'rgba(212,160,23,0.85)', borderRadius: 6 }
+    ]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { position:'top' },
+      tooltip: { callbacks: { label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y.toLocaleString('fr-FR') + ' MAD' } }
+    },
+    scales: {
+      y: { ticks: { callback: v => (v/1000000).toFixed(2)+'M' }, grid: { color:'#e8f0eb' } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  CHART 3 — DEPT DONUT
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartDeptDonut'), {
+  type: 'doughnut',
+  data: {
+    labels: DATA.dept.map(d => d.Dept),
+    datasets: [{
+      data: DATA.dept.map(d=>d.Realise),
+      backgroundColor: DEPT_COLORS,
+      borderWidth: 2, borderColor:'#fff'
+    }]
+  },
+  options: {
+    responsive: true,
+    cutout: '62%',
+    plugins: {
+      legend: { position:'right' },
+      tooltip: { callbacks: { label: ctx => ctx.label + ': ' + ctx.parsed.toLocaleString('fr-FR') + ' MAD' } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  CHART 4 — POSTE BAR HORIZONTAL
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartPoste'), {
+  type: 'bar',
+  data: {
+    labels: DATA.poste.map(d => d.Poste),
+    datasets: [
+      { label:'Budget', data: DATA.poste.map(d=>d.Budget),
+        backgroundColor: 'rgba(0,102,51,0.7)', borderRadius: 5 },
+      { label:'Réalisé', data: DATA.poste.map(d=>d.Realise),
+        backgroundColor: 'rgba(212,160,23,0.82)', borderRadius: 5 }
+    ]
+  },
+  options: {
+    indexAxis: 'y',
+    responsive: true,
+    plugins: { legend: { position:'top' } },
+    scales: {
+      x: { ticks: { callback: v => (v/1000000).toFixed(1)+'M' }, grid: { color:'#e8f0eb' } }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  CHART 5 — ALERTES
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartAlertes'), {
+  type: 'bar',
+  data: {
+    labels: DATA.alertes_dept.map(d => d.Dept),
+    datasets: [{
+      label: 'Nb Alertes',
+      data: DATA.alertes_dept.map(d=>d.Count),
+      backgroundColor: ['#e53e3e','#dd6b20','#d69e2e','#38a169','#3182ce'],
+      borderRadius: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display:false } },
+    scales: { y: { grid: { color:'#e8f0eb' } } }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  CHART 6 — CONSO %
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartConso'), {
+  type: 'bar',
+  data: {
+    labels: DATA.conso_dept.map(d => d.Dept),
+    datasets: [{
+      label: 'Conso %',
+      data: DATA.conso_dept.map(d=>d.Conso),
+      backgroundColor: DATA.conso_dept.map(d => d.Conso > 105 ? '#e53e3e' : '#D4A017'),
+      borderRadius: 8
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display:false } },
+    scales: {
+      y: {
+        min: 100, max: 112,
+        ticks: { callback: v => v+'%' },
+        grid: { color:'#e8f0eb' }
+      }
+    }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  CHART 7 — ÉCART MENSUEL
+// ═══════════════════════════════════════════════
+new Chart(document.getElementById('chartEcart'), {
+  type: 'bar',
+  data: {
+    labels: DATA.mois.map(d => d.Mois),
+    datasets: [{
+      label: 'Écart MAD',
+      data: DATA.mois.map(d => d.Ecart),
+      backgroundColor: DATA.mois.map(d => d.Ecart > 0 ? 'rgba(229,62,62,0.75)' : 'rgba(56,161,105,0.75)'),
+      borderRadius: 6
+    }]
+  },
+  options: {
+    responsive: true,
+    plugins: { legend: { display:false },
+      tooltip: { callbacks: { label: ctx => 'Écart: ' + ctx.parsed.y.toLocaleString('fr-FR') + ' MAD' } }
+    },
+    scales: { y: { grid: { color:'#e8f0eb' } } }
+  }
+});
+
+// ═══════════════════════════════════════════════
+//  TABLE
+// ═══════════════════════════════════════════════
+let allRows = DATA.table;
+let filtered = [...allRows];
+let currentPage = 1;
+const rowsPerPage = 12;
+let sortCol = -1, sortAsc = true;
+
+function fmt(n) { return Number(n).toLocaleString('fr-FR'); }
+
+function renderTable() {
+  const body = document.getElementById('tableBody');
+  const start = (currentPage - 1) * rowsPerPage;
+  const page  = filtered.slice(start, start + rowsPerPage);
+  body.innerHTML = page.map(r => `
+    <tr>
+      <td>${r[0]}</td>
+      <td>${r[1]}</td>
+      <td>${r[2]}</td>
+      <td style="text-align:right">${fmt(r[3])}</td>
+      <td style="text-align:right">${fmt(r[4])}</td>
+      <td style="text-align:right;color:${r[5]>0?'#e53e3e':'#38a169'};font-weight:600">
+        ${r[5]>0?'+':''}${fmt(r[5])}
+      </td>
+      <td style="text-align:right;color:${r[6]>100?'#e53e3e':'#38a169'};font-weight:600">${r[6].toFixed(1)}%</td>
+      <td><span class="${r[7]==='ALERTE'?'badge-alert':'badge-ok'}">${r[7]}</span></td>
+    </tr>`).join('');
+  renderPagination();
+  document.getElementById('tableCount').textContent = `${filtered.length} ligne(s) affichée(s)`;
+}
+
+function renderPagination() {
+  const total = Math.ceil(filtered.length / rowsPerPage);
+  const info  = document.getElementById('paginationInfo');
+  const btns  = document.getElementById('paginationBtns');
+  const start = (currentPage-1)*rowsPerPage + 1;
+  const end   = Math.min(currentPage*rowsPerPage, filtered.length);
+  info.textContent = `${start}–${end} sur ${filtered.length}`;
+
+  let html = `<button onclick="changePage(${currentPage-1})" ${currentPage===1?'disabled':''}>‹ Préc.</button>`;
+  for (let i = 1; i <= total; i++) {
+    if (i===1||i===total||Math.abs(i-currentPage)<=1)
+      html += `<button onclick="changePage(${i})" class="${i===currentPage?'active':''}">${i}</button>`;
+    else if (Math.abs(i-currentPage)===2)
+      html += `<button disabled>…</button>`;
+  }
+  html += `<button onclick="changePage(${currentPage+1})" ${currentPage===total||total===0?'disabled':''}>Suiv. ›</button>`;
+  btns.innerHTML = html;
+}
+
+function changePage(p) {
+  const total = Math.ceil(filtered.length / rowsPerPage);
+  if (p < 1 || p > total) return;
+  currentPage = p;
+  renderTable();
+}
+
+function filterTable() {
+  const q    = document.getElementById('searchInput').value.toLowerCase();
+  const dept = document.getElementById('filterDept').value;
+  const alrt = document.getElementById('filterAlerte').value;
+  filtered = allRows.filter(r => {
+    const match = !q || r.some(v => String(v).toLowerCase().includes(q));
+    const deptOk = !dept || r[1] === dept;
+    const alrtOk = !alrt || r[7] === alrt;
+    return match && deptOk && alrtOk;
+  });
+  currentPage = 1;
+  renderTable();
+}
+
+function sortTable(col) {
+  if (sortCol === col) sortAsc = !sortAsc;
+  else { sortCol = col; sortAsc = true; }
+  filtered.sort((a,b) => {
+    let va = a[col], vb = b[col];
+    if (typeof va === 'number') return sortAsc ? va-vb : vb-va;
+    return sortAsc ? String(va).localeCompare(String(vb), 'fr') : String(vb).localeCompare(String(va), 'fr');
+  });
+  renderTable();
+}
+
+renderTable();
+</script>
+</body>
+</html>
