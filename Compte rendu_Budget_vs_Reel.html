@@ -1,0 +1,496 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Analyse Budget vs Réel | Projet IG | ENCG Settat</title>
+    <!-- Google Fonts pour une typographie moderne -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,300;14..32,400;14..32,500;14..32,600;14..32,700&display=swap" rel="stylesheet">
+    <!-- Font Awesome 6 (gratuit) pour les icônes -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f2f8;
+            color: #1a2634;
+            line-height: 1.5;
+            padding: 40px 24px;
+        }
+
+        .container {
+            max-width: 1280px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 28px;
+            box-shadow: 0 20px 35px -12px rgba(0, 0, 0, 0.1);
+            overflow: hidden;
+            padding: 2rem 2rem 3rem 2rem;
+        }
+
+        /* header badges & titre */
+        .report-header {
+            border-bottom: 2px solid #e9edf2;
+            padding-bottom: 1.8rem;
+            margin-bottom: 2rem;
+        }
+
+        .meta-grid {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .badge-status {
+            background: #fff1e5;
+            color: #c2410c;
+            padding: 0.4rem 1rem;
+            border-radius: 40px;
+            font-weight: 600;
+            font-size: 0.85rem;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .infos {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 2rem;
+            font-size: 0.9rem;
+            color: #4b5b6c;
+        }
+
+        .infos i {
+            width: 1.4rem;
+            color: #2c6e9e;
+        }
+
+        h1 {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: 0.5rem 0 0.25rem 0;
+            color: #0f2b3d;
+            letter-spacing: -0.3px;
+        }
+
+        .subtitle {
+            font-size: 1rem;
+            color: #5c6f87;
+            margin-bottom: 1rem;
+        }
+
+        /* sommaire */
+        .sommaire {
+            background: #f8fafd;
+            border-radius: 24px;
+            padding: 1.3rem 2rem;
+            margin-bottom: 2rem;
+            border: 1px solid #e2e8f0;
+        }
+
+        .sommaire h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .sommaire ul {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem 2rem;
+            list-style: none;
+        }
+
+        .sommaire li a {
+            text-decoration: none;
+            color: #2c6e9e;
+            font-weight: 500;
+            font-size: 0.9rem;
+            transition: 0.2s;
+        }
+
+        .sommaire li a:hover {
+            color: #0e4b6e;
+            text-decoration: underline;
+        }
+
+        /* sections */
+        section {
+            margin-bottom: 2.5rem;
+            scroll-margin-top: 1rem;
+        }
+
+        h2 {
+            font-size: 1.6rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            padding-bottom: 0.3rem;
+            border-left: 5px solid #2c6e9e;
+            padding-left: 1rem;
+            color: #1e2f3e;
+        }
+
+        h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            margin: 1.2rem 0 0.8rem 0;
+            color: #2c3e50;
+        }
+
+        .kpi-cards {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1.2rem;
+            margin: 1.5rem 0;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 1rem 1rem 1rem 1.2rem;
+            box-shadow: 0 5px 12px rgba(0, 0, 0, 0.03);
+            border: 1px solid #eef2f6;
+            transition: all 0.2s;
+        }
+
+        .card .label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+            color: #6f7f8f;
+        }
+
+        .card .value {
+            font-size: 1.9rem;
+            font-weight: 700;
+            margin: 0.4rem 0;
+            color: #1a2c3c;
+        }
+
+        .card .trend {
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+            box-shadow: 0 1px 2px rgba(0,0,0,0.03);
+        }
+
+        th {
+            background: #f1f5f9;
+            padding: 12px 10px;
+            text-align: left;
+            font-weight: 600;
+            border-bottom: 1px solid #e2e8f0;
+        }
+
+        td {
+            padding: 10px;
+            border-bottom: 1px solid #ecf1f5;
+        }
+
+        .statut-alerte {
+            background: #fee2e2;
+            color: #b91c1c;
+            font-weight: 600;
+            padding: 4px 8px;
+            border-radius: 30px;
+            font-size: 0.7rem;
+            display: inline-block;
+        }
+
+        .badge-ok {
+            background: #e0f2e9;
+            color: #1f7840;
+        }
+
+        .alert-bar {
+            background: #fffbeb;
+            border-left: 4px solid #e67e22;
+            padding: 1rem 1.2rem;
+            margin: 1rem 0;
+            border-radius: 12px;
+        }
+
+        .flex-between {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .text-danger {
+            color: #c2410c;
+            font-weight: 600;
+        }
+
+        .text-success {
+            color: #2b6e3c;
+        }
+
+        .progress-percent {
+            font-weight: 700;
+        }
+
+        .note {
+            background: #f9f9fc;
+            padding: 0.8rem 1.2rem;
+            border-radius: 16px;
+            font-size: 0.85rem;
+            margin-top: 0.8rem;
+        }
+
+        footer {
+            margin-top: 2.5rem;
+            padding-top: 1.2rem;
+            border-top: 1px solid #e2e8f0;
+            font-size: 0.8rem;
+            color: #5e6f82;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .container {
+                padding: 1.2rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .card .value {
+                font-size: 1.5rem;
+            }
+            table, thead, tbody, th, td, tr {
+                display: block;
+            }
+            th {
+                display: none;
+            }
+            tr {
+                margin-bottom: 1rem;
+                border: 1px solid #e9edf2;
+                border-radius: 16px;
+                padding: 0.5rem;
+            }
+            td {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding: 0.5rem;
+                border: none;
+                border-bottom: 1px solid #f0f0f0;
+            }
+            td::before {
+                content: attr(data-label);
+                font-weight: 600;
+                width: 45%;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="report-header">
+        <div class="meta-grid">
+            <div class="badge-status">
+                <i class="fas fa-exclamation-triangle"></i> ⚠ Dépassement budgétaire constaté
+            </div>
+            <div class="infos">
+                <span><i class="fas fa-user-pen"></i> Israe Hachem</span>
+                <span><i class="fas fa-building"></i> ENCG Settat — Université Hassan 1er</span>
+                <span><i class="fas fa-calendar-alt"></i> 31 mars 2026</span>
+            </div>
+        </div>
+        <h1>Analyse Budget vs Réel</h1>
+        <div class="subtitle">Projet IG — Exercice 2025-2026 | Rapport comparatif détaillé</div>
+    </div>
+
+    <!-- Sommaire -->
+    <div class="sommaire">
+        <h3><i class="fas fa-list-ul"></i> Sommaire</h3>
+        <ul>
+            <li><a href="#resume">1. Résumé exécutif</a></li>
+            <li><a href="#kpis">2. Indicateurs clés</a></li>
+            <li><a href="#departements">3. Analyse par département</a></li>
+            <li><a href="#mois">4. Analyse par mois</a></li>
+            <li><a href="#postes">5. Analyse par poste budgétaire</a></li>
+            <li><a href="#alertes">6. Suivi des alertes</a></li>
+            <li><a href="#constats">7. Constats & points de vigilance</a></li>
+            <li><a href="#recos">8. Recommandations</a></li>
+            <li><a href="#conclusion">9. Conclusion</a></li>
+        </ul>
+    </div>
+
+    <!-- 1. Résumé Exécutif -->
+    <section id="resume">
+        <h2>1. Résumé Exécutif</h2>
+        <p>Le présent compte rendu analyse l'exécution budgétaire du Projet IG sur l'ensemble de l'exercice 2025-2026, couvrant <strong>5 départements</strong>, <strong>8 postes de dépenses</strong> et <strong>12 mois</strong> d'activité, soit <strong>480 lignes budgétaires</strong> examinées.</p>
+        <p>Le bilan global fait apparaître un <strong class="text-danger">dépassement net de 727 553 MAD</strong>, représentant <strong>5,4 points au-dessus du budget initial</strong>. Ce dépassement est systématique : il touche l'ensemble des départements et la totalité des mois, ce qui témoigne d'une <strong>sous-estimation structurelle des charges</strong> lors de la phase de planification.</p>
+        <div class="alert-bar">
+            <i class="fas fa-bell"></i> <strong>Signal d'alerte :</strong> 184 lignes sur 480 sont en situation de dépassement, soit <strong>38,3 % du suivi budgétaire total</strong>.
+        </div>
+    </section>
+
+    <!-- 2. KPI Cards -->
+    <section id="kpis">
+        <h2>2. Indicateurs Clés de Performance</h2>
+        <div class="kpi-cards">
+            <div class="card"><div class="label">💰 Budget Total Alloué</div><div class="value">13 688 415 MAD</div></div>
+            <div class="card"><div class="label">📈 Réalisé Total</div><div class="value">14 415 968 MAD</div></div>
+            <div class="card"><div class="label">⚠ Écart Global</div><div class="value text-danger">+727 553 MAD</div></div>
+            <div class="card"><div class="label">📊 Taux de Consommation</div><div class="value">105,4 %</div></div>
+            <div class="card"><div class="label">🔴 Lignes en Alerte</div><div class="value">184 / 480</div><div class="trend">38,3 %</div></div>
+            <div class="card"><div class="label">✅ Lignes conformes</div><div class="value">296 / 480</div><div class="trend">61,7 %</div></div>
+            <div class="card"><div class="label">📅 Mois le plus tendu</div><div class="value">Février</div><div class="trend">+100 354 MAD</div></div>
+            <div class="card"><div class="label">🏢 Département le + dépassé</div><div class="value">Marketing</div><div class="trend">+192 369 MAD</div></div>
+            <div class="card"><div class="label">📌 Poste le + dépassé</div><div class="value">Charges sociales</div><div class="trend">+120 862 MAD</div></div>
+        </div>
+    </section>
+
+    <!-- 3. Analyse par département -->
+    <section id="departements">
+        <h2>3. Analyse par Département</h2>
+        <h3>3.1 Vue d'ensemble</h3>
+        <table style="width:100%">
+            <thead><tr><th>Département</th><th>Budget (MAD)</th><th>Réalisé (MAD)</th><th>Écart (MAD)</th><th>Conso %</th><th>Statut</th></tr>
+            </thead>
+            <tbody>
+                <tr><td data-label="Département">Marketing</td><td data-label="Budget">2 633 911</td><td data-label="Réalisé">2 826 280</td><td data-label="Écart" class="text-danger">+192 369</td><td data-label="Conso">107,6 %</td><td data-label="Statut"><span class="statut-alerte">🔴 ALERTE</span></td></tr>
+                <tr><td data-label="Département">Finance</td><td data-label="Budget">2 643 196</td><td data-label="Réalisé">2 797 263</td><td data-label="Écart" class="text-danger">+154 067</td><td data-label="Conso">105,3 %</td><td><span class="statut-alerte">🔴 ALERTE</span></td></tr>
+                <tr><td data-label="Département">RH</td><td data-label="Budget">2 604 837</td><td data-label="Réalisé">2 757 185</td><td data-label="Écart" class="text-danger">+152 348</td><td data-label="Conso">105,9 %</td><td><span class="statut-alerte">🔴 ALERTE</span></td></tr>
+                <tr><td data-label="Département">IT</td><td data-label="Budget">2 937 894</td><td data-label="Réalisé">3 074 749</td><td data-label="Écart" class="text-danger">+136 855</td><td data-label="Conso">104,7 %</td><td><span class="statut-alerte">🔴 ALERTE</span></td></tr>
+                <tr><td data-label="Département">Production</td><td data-label="Budget">2 868 577</td><td data-label="Réalisé">2 960 491</td><td data-label="Écart" class="text-danger">+91 914</td><td data-label="Conso">103,5 %</td><td><span class="statut-alerte">🔴 ALERTE</span></td></tr>
+                <tr style="background:#fafcff; font-weight:600;"><td data-label="Département"><strong>TOTAL</strong></td><td data-label="Budget">13 688 415</td><td data-label="Réalisé">14 415 968</td><td data-label="Écart">+727 553</td><td data-label="Conso">105,4 %</td><td></td></tr>
+            </tbody>
+        </table>
+        <div class="note"><strong>Commentaires :</strong> Marketing (+192K MAD, 107,6%) est le plus impacté. Production affiche la meilleure maîtrise relative (103,5%). Tous les départements sont en dépassement.</div>
+    </section>
+
+    <!-- 4. Analyse par mois -->
+    <section id="mois">
+        <h2>4. Analyse par Mois</h2>
+        <table>
+            <thead><tr><th>Mois</th><th>Budget MAD</th><th>Réalisé MAD</th><th>Écart MAD</th><th>Tendance</th></tr></thead>
+            <tbody>
+                <tr><td data-label="Mois">Janvier</td><td data-label="Budget">1 122 321</td><td data-label="Réalisé">1 166 889</td><td data-label="Écart">+44 568</td><td>🟡 Modéré</td></tr>
+                <tr><td data-label="Mois"><strong>Février</strong></td><td data-label="Budget">1 202 319</td><td data-label="Réalisé">1 302 673</td><td data-label="Écart" class="text-danger"><strong>+100 354</strong></td><td>🔴 Critique</td></tr>
+                <tr><td data-label="Mois">Mars</td><td data-label="Budget">1 146 889</td><td data-label="Réalisé">1 207 997</td><td data-label="Écart">+61 108</td><td>🟠 Élevé</td></tr>
+                <tr><td data-label="Mois">Avril</td><td data-label="Budget">1 196 089</td><td data-label="Réalisé">1 279 120</td><td data-label="Écart">+83 031</td><td>🟠 Élevé</td></tr>
+                <tr><td data-label="Mois">Mai</td><td data-label="Budget">1 222 196</td><td data-label="Réalisé">1 282 738</td><td data-label="Écart">+60 542</td><td>🟠 Élevé</td></tr>
+                <tr><td data-label="Mois">Juin</td><td data-label="Budget">1 152 452</td><td data-label="Réalisé">1 189 977</td><td data-label="Écart">+37 525</td><td>🟡 Modéré</td></tr>
+                <tr><td data-label="Mois">Juillet</td><td data-label="Budget">1 124 158</td><td data-label="Réalisé">1 193 326</td><td data-label="Écart">+69 168</td><td>🟠 Élevé</td></tr>
+                <tr><td data-label="Mois">Août</td><td data-label="Budget">1 029 664</td><td data-label="Réalisé">1 101 626</td><td data-label="Écart">+71 962</td><td>🟠 Élevé</td></tr>
+                <tr><td data-label="Mois">Septembre</td><td data-label="Budget">1 115 915</td><td data-label="Réalisé">1 173 427</td><td data-label="Écart">+57 512</td><td>🟡 Modéré</td></tr>
+                <tr><td data-label="Mois">Octobre</td><td data-label="Budget">1 099 368</td><td data-label="Réalisé">1 138 679</td><td data-label="Écart">+39 311</td><td>🟡 Modéré</td></tr>
+                <tr><td data-label="Mois">Novembre</td><td data-label="Budget">1 205 066</td><td data-label="Réalisé">1 258 729</td><td data-label="Écart">+53 663</td><td>🟡 Modéré</td></tr>
+                <tr><td data-label="Mois">Décembre</td><td data-label="Budget">1 071 978</td><td data-label="Réalisé">1 120 787</td><td data-label="Écart">+48 809</td><td>🟡 Modéré</td></tr>
+            </tbody>
+        </table>
+        <div class="note"><i class="fas fa-chart-line"></i> <strong>Pic Février :</strong> +100 354 MAD, soit ~14% de l'écart annuel. Second semestre légèrement plus maîtrisé.</div>
+    </section>
+
+    <!-- 5. Analyse par poste budgétaire -->
+    <section id="postes">
+        <h2>5. Analyse par Poste Budgétaire</h2>
+        <table>
+            <thead><tr><th>Poste</th><th>Budget MAD</th><th>Réalisé MAD</th><th>Écart MAD</th><th>Conso %</th></tr></thead>
+            <tbody>
+                <tr><td data-label="Poste">Charges sociales</td><td data-label="Budget">1 579 803</td><td data-label="Réalisé">1 700 665</td><td class="text-danger" data-label="Écart">+120 862</td><td data-label="Conso">107,8 %</td></tr>
+                <tr><td data-label="Poste">Salaires</td><td data-label="Budget">1 727 218</td><td data-label="Réalisé">1 837 115</td><td class="text-danger" data-label="Écart">+109 897</td><td data-label="Conso">107,4 %</td></tr>
+                <tr><td data-label="Poste">Maintenance</td><td data-label="Budget">1 787 124</td><td data-label="Réalisé">1 884 452</td><td data-label="Écart">+97 328</td><td data-label="Conso">105,2 %</td></tr>
+                <tr><td data-label="Poste">Divers</td><td data-label="Budget">1 786 883</td><td data-label="Réalisé">1 883 837</td><td data-label="Écart">+96 954</td><td data-label="Conso">104,9 %</td></tr>
+                <tr><td data-label="Poste">Formation</td><td data-label="Budget">1 547 847</td><td data-label="Réalisé">1 643 683</td><td data-label="Écart">+95 836</td><td data-label="Conso">105,9 %</td></tr>
+                <tr><td data-label="Poste">IT services</td><td data-label="Budget">1 706 931</td><td data-label="Réalisé">1 798 814</td><td data-label="Écart">+91 883</td><td data-label="Conso">105,3 %</td></tr>
+                <tr><td data-label="Poste">Marketing</td><td data-label="Budget">1 666 129</td><td data-label="Réalisé">1 753 128</td><td data-label="Écart">+86 999</td><td data-label="Conso">105,5 %</td></tr>
+                <tr><td data-label="Poste">Fournitures</td><td data-label="Budget">1 886 480</td><td data-label="Réalisé">1 914 274</td><td data-label="Écart">+27 794</td><td data-label="Conso"><span class="text-success">101,3 %</span></td></tr>
+                <tr style="background:#fafcff;"><td data-label="Poste"><strong>TOTAL</strong></td><td data-label="Budget">13 688 415</td><td data-label="Réalisé">14 415 968</td><td data-label="Écart">+727 553</td><td data-label="Conso">105,4 %</td></tr>
+            </tbody>
+        </table>
+        <div class="note"><strong>Focus :</strong> Charges sociales + Salaires = +230 759 MAD (31,7% de l'écart total). Fournitures quasi maîtrisé (+1,3%).</div>
+    </section>
+
+    <!-- 6. Suivi des alertes -->
+    <section id="alertes">
+        <h2>6. Suivi des Alertes</h2>
+        <div class="flex-between" style="margin-bottom: 1rem;">
+            <span><i class="fas fa-check-circle text-success"></i> Lignes conformes (OK) : <strong>296 lignes (61,7%)</strong></span>
+            <span><i class="fas fa-exclamation-triangle text-danger"></i> Lignes en dépassement : <strong>184 lignes (38,3%)</strong></span>
+        </div>
+        <table>
+            <thead><tr><th>Département</th><th>Alertes</th><th>Total lignes</th><th>Taux d'alerte</th></tr></thead>
+            <tbody>
+                <tr><td data-label="Département">Marketing</td><td data-label="Alertes">46</td><td data-label="Total">96</td><td data-label="Taux">47,9%</td></tr>
+                <tr><td data-label="Département">RH</td><td data-label="Alertes">39</td><td data-label="Total">96</td><td data-label="Taux">40,6%</td></tr>
+                <tr><td data-label="Département">Finance</td><td data-label="Alertes">38</td><td data-label="Total">96</td><td data-label="Taux">39,6%</td></tr>
+                <tr><td data-label="Département">IT</td><td data-label="Alertes">31</td><td data-label="Total">96</td><td data-label="Taux">32,3%</td></tr>
+                <tr><td data-label="Département">Production</td><td data-label="Alertes">30</td><td data-label="Total">96</td><td data-label="Taux">31,3%</td></tr>
+                <tr style="font-weight:600;"><td data-label="Département">TOTAL</td><td data-label="Alertes">184</td><td data-label="Total">480</td><td data-label="Taux">38,3%</td></tr>
+            </tbody>
+        </table>
+    </section>
+
+    <!-- 7. Constats & points de vigilance -->
+    <section id="constats">
+        <h2>7. Constats & Points de Vigilance</h2>
+        <div style="display: flex; flex-wrap: wrap; gap: 1.5rem; margin-top: 1rem;">
+            <div style="flex:1; background:#f4fbf7; padding:1rem; border-radius: 20px;">
+                <i class="fas fa-check-circle text-success"></i> <strong>✅ Points positifs</strong>
+                <ul style="margin-top: 0.6rem; list-style: none;">
+                    <li>• Production : dépassement le plus faible (+91 914 MAD / 103,5%)</li>
+                    <li>• Fournitures : seulement +1,3% de dépassement</li>
+                    <li>• Second semestre montre une légère amélioration</li>
+                    <li>• 61,7% des lignes restent dans les limites acceptables</li>
+                </ul>
+            </div>
+            <div style="flex:1; background:#fff7ed; padding:1rem; border-radius: 20px;">
+                <i class="fas fa-exclamation-triangle text-danger"></i> <strong>⚠ Points de vigilance</strong>
+                <ul style="margin-top: 0.6rem; list-style: none;">
+                    <li>• Dépassement universel : aucun département ni mois en sous-consommation</li>
+                    <li>• Charges de personnel sous-estimées : +230 759 MAD cumulés</li>
+                    <li>• Pic anormal en février (+100 354 MAD) à analyser</li>
+                    <li>• Marketing : 107,6% de conso et 47,9% de lignes en alerte</li>
+                </ul>
+            </div>
+        </div>
+    </section>
+
+    <!-- 8. Recommandations -->
+    <section id="recos">
+        <h2>8. Recommandations</h2>
+        <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px,1fr)); gap:1.2rem;">
+            <div style="background:#f1f5fe; border-radius: 20px; padding:1rem;"><i class="fas fa-chart-simple"></i> <strong>Court terme</strong><br>• Audit charges sociales & salaires<br>• Enquête sur le pic de février<br>• Plan correctif Marketing avec double validation</div>
+            <div style="background:#f1f5fe; border-radius: 20px; padding:1rem;"><i class="fas fa-chart-line"></i> <strong>Moyen terme</strong><br>• Révision hypothèses budgétaires (+5 à 8%)<br>• Tableau de bord mensuel automatisé<br>• Benchmarking avec département Production<br>• Renégociation contrats formation & IT services</div>
+        </div>
+    </section>
+
+    <!-- 9. Conclusion -->
+    <section id="conclusion">
+        <h2>9. Conclusion</h2>
+        <p>L'analyse révèle un dépassement global maîtrisé en valeur absolue (+727 553 MAD sur 13,7 M MAD), mais <strong>préoccupant par son caractère systématique</strong>. Aucun département ni mois sous budget, ce qui indique une sous-calibration initiale des hypothèses. La priorité pour le prochain exercice réside dans la <strong>révision des méthodes de cadrage budgétaire</strong> et la mise en place d'un suivi réactif. Les actions correctives proposées visent un taux de consommation cible entre 98% et 102%.</p>
+        <div class="alert-bar" style="margin-top:1rem;">
+            <i class="fas fa-file-alt"></i> Compte rendu rédigé par <strong>Israe Hachem</strong> — ENCG Settat, Université Hassan 1er.<br>
+            Source : Budget_Data.xlsx (480 lignes analysées) | 31 mars 2026
+        </div>
+    </section>
+
+    <footer>
+        <i class="fas fa-chart-pie"></i> Rapport généré automatiquement — Projet IG — Tous les indicateurs sont basés sur l'exercice 2025-2026
+    </footer>
+</div>
+</body>
+</html>
